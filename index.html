@@ -160,6 +160,21 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 .m-confirm:hover{filter:brightness(1.12)}
 .m-close{width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:12px;margin-top:6px;cursor:pointer;padding:5px}
 
+/* ── COUNT BAR ── */
+.count-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;margin:0 18px 6px}
+.count-title{font-size:10px;font-weight:700;color:var(--gl);letter-spacing:.5px;margin-bottom:8px}
+.count-main{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.count-total-wrap{display:flex;flex-direction:column;gap:2px}
+.count-total-num{font-size:26px;font-weight:900;color:var(--y);line-height:1}
+.count-total-lbl{font-size:10px;color:var(--muted)}
+.count-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.count-chip{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.07);border-radius:12px;padding:2px 8px 2px 4px;font-size:11px;color:var(--cream)}
+.count-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.count-mine-lbl{font-size:10px;color:var(--muted);text-align:center;margin-bottom:2px}
+.count-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);color:var(--cream);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s;font-weight:800;line-height:1;flex-shrink:0}
+.count-btn:hover{border-color:var(--gl);background:rgba(123,198,126,.12)}
+.count-num{font-size:22px;font-weight:900;color:var(--cream);min-width:28px;text-align:center}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(0);background:var(--gd);color:#fff;border-radius:18px;padding:9px 20px;font-size:12px;font-weight:700;z-index:300;opacity:0;transition:opacity .25s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none}
 .toast.show{opacity:1}
@@ -213,6 +228,24 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
       <div style="width:80px"></div>
     </div>
     <div class="countdown" id="countdown"></div>
+    <div class="count-bar">
+      <div class="count-title">🎋 大家要包幾顆？</div>
+      <div class="count-main">
+        <div class="count-total-wrap">
+          <div class="count-total-num" id="count-total">0</div>
+          <div class="count-total-lbl">總顆數</div>
+        </div>
+        <div>
+          <div class="count-mine-lbl">我要包</div>
+          <div class="count-stepper">
+            <button class="count-btn" id="count-minus">－</button>
+            <div class="count-num" id="count-mine">0</div>
+            <button class="count-btn" id="count-plus">＋</button>
+          </div>
+        </div>
+      </div>
+      <div class="count-chips" id="count-chips"></div>
+    </div>
     <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
     <div class="prog-lbl" id="prog-lbl">載入中…</div>
   </div>
@@ -313,6 +346,7 @@ async function apiGet(){
       if(d.state.ingredients) state.ingredients=d.state.ingredients;
       else state.ingredients=JSON.parse(JSON.stringify(DEFAULT_INGREDIENTS)).map(i=>({...i,claimants:[]}));
       if(d.state.tasks) state.tasks=d.state.tasks;
+      if(d.state.counts) state.counts=d.state.counts;
       members=d.members||[];
       sync('ok');
     } else sync('err');
@@ -434,10 +468,36 @@ function enterApp(){
     showScreen('scr-welcome');
     renderWelcome();
   };
+  document.getElementById('count-minus').onclick=()=>changeCount(-1);
+  document.getElementById('count-plus').onclick=()=>changeCount(1);
   render();
   updateCountdown();
   setInterval(updateCountdown,60000);
   pollTimer=setInterval(async()=>{ try{ await apiGet(); render(); }catch{} },POLL_MS);
+}
+
+async function changeCount(delta){
+  if(!state.counts) state.counts={};
+  const cur=state.counts[me.name]||0;
+  const next=Math.max(0,cur+delta);
+  state.counts[me.name]=next;
+  updateCountBar();
+  await apiSet('counts',state.counts);
+}
+
+function updateCountBar(){
+  const counts=state.counts||{};
+  const myCount=counts[me.name]||0;
+  const total=Object.values(counts).reduce((a,b)=>a+(+b),0);
+  document.getElementById('count-mine').textContent=myCount;
+  document.getElementById('count-total').textContent=total;
+  const chips=document.getElementById('count-chips');
+  chips.innerHTML=Object.entries(counts)
+    .filter(([,v])=>v>0)
+    .map(([n,v])=>{
+      const m=members.find(x=>x.name===n);
+      return `<div class="count-chip"><span>${m?m.icon:'🌿'}</span>${n} ${v}顆</div>`;
+    }).join('');
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -544,6 +604,7 @@ function render(){
   });
 
   updateProgress();
+  updateCountBar();
 }
 
 function mkSecLbl(text){
