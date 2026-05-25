@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>粽子大作戰 🎋</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+:root{
+  --bg:#182818;--surface:#20341f;--card:#273c27;
+  --gl:#7bc67e;--g:#4caf50;--gd:#2e7d32;
+  --y:#ffd54f;--o:#ff8f00;--r:#ef5350;
+  --cream:#fff9ec;--text:#eef3ee;--muted:#7a9e7a;
+  --border:#3a5238;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── SCREENS ── */
+.screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.screen.hidden{display:none}
+
+/* ── LOADING ── */
+#scr-loading .spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#scr-loading p{color:var(--muted);font-size:14px}
+
+/* ── WELCOME / CREATE ── */
+.welcome-emoji{font-size:64px;margin-bottom:12px;display:block;animation:bounce 2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.welcome-title{font-size:28px;font-weight:900;color:var(--cream);text-align:center;margin-bottom:4px}
+.welcome-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;line-height:1.6}
+.card-box{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:22px 20px;width:100%;max-width:360px}
+.card-box h3{font-size:14px;font-weight:800;color:var(--gl);margin-bottom:12px;letter-spacing:.5px}
+
+/* members list on welcome */
+.member-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.member-btn{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;cursor:pointer;transition:border-color .15s,background .15s;width:100%}
+.member-btn:hover{border-color:var(--gl);background:rgba(123,198,126,.08)}
+.member-btn.active{border-color:var(--g);background:rgba(76,175,80,.15)}
+.member-icon{font-size:28px;width:40px;height:40px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;border:2px solid var(--border);flex-shrink:0}
+.member-name{font-size:15px;font-weight:800;color:var(--cream)}
+.member-role{font-size:11px;color:var(--muted)}
+.divider{text-align:center;font-size:11px;color:var(--muted);margin:12px 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+
+/* avatar grid */
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.av-pick{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border:2px solid var(--border);cursor:pointer;gap:3px;transition:border-color .15s,background .15s;font-size:26px}
+.av-pick:hover{border-color:var(--gl);background:rgba(123,198,126,.1)}
+.av-pick.sel{border-color:var(--g);background:rgba(76,175,80,.2)}
+.av-pick span{font-size:8px;color:var(--muted);font-weight:700}
+.txt-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--cream);font-family:inherit;font-size:14px;padding:10px 14px;outline:none;margin-bottom:12px}
+.txt-input:focus{border-color:var(--gl)}
+.txt-input::placeholder{color:var(--muted)}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:14px;font-weight:800;padding:13px 0;cursor:pointer;letter-spacing:.5px;transition:filter .15s,transform .1s}
+.btn-primary:hover{filter:brightness(1.12);transform:scale(1.01)}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;margin-top:8px;cursor:pointer;padding:6px}
+
+/* ── MAIN APP ── */
+.app-hdr{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,var(--bg) 80%,transparent);padding:14px 18px 8px;text-align:center}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.hdr-user{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 6px;cursor:pointer;transition:border-color .15s}
+.hdr-user:hover{border-color:var(--gl)}
+.hdr-user-icon{font-size:20px}
+.hdr-user-name{font-size:12px;font-weight:800;color:var(--cream)}
+.hdr-title-wrap{flex:1;text-align:center}
+.hdr-title{font-size:20px;font-weight:900;color:var(--cream)}
+.hdr-sync{width:7px;height:7px;border-radius:50%;background:var(--border);display:inline-block;margin-left:4px;vertical-align:middle;transition:background .3s}
+.hdr-sync.ok{background:var(--g)}.hdr-sync.err{background:var(--r)}.hdr-sync.loading{background:var(--y);animation:blink .7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.countdown{display:flex;justify-content:center;gap:8px;margin-bottom:6px}
+.cd-block{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:4px 10px;text-align:center}
+.cd-num{font-size:16px;font-weight:900;color:var(--cream)}
+.cd-lab{font-size:8px;color:var(--muted);font-weight:700;letter-spacing:1px}
+.prog-wrap{margin:0 18px;background:var(--surface);border-radius:20px;height:8px;overflow:hidden;border:1px solid var(--border)}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gd),var(--gl));border-radius:20px;transition:width 1s cubic-bezier(.4,0,.2,1);width:0%}
+.prog-lbl{text-align:center;font-size:10px;color:var(--muted);margin-top:3px;margin-bottom:6px}
+
+/* ── TRACK ── */
+.track{padding:0 14px 120px;position:relative}
+.track-line{position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:3px;background:repeating-linear-gradient(to bottom,var(--border) 0 8px,transparent 8px 18px);z-index:0}
+.sec-lbl{position:relative;z-index:2;display:flex;align-items:center;gap:8px;margin:24px 0 10px}
+.sec-lbl::before,.sec-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.sec-lbl span{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:var(--gl);letter-spacing:.5px;white-space:nowrap}
+
+/* node row */
+.node-row{display:flex;align-items:flex-start;position:relative;z-index:2;margin-bottom:16px}
+.node-row.L{flex-direction:row}.node-row.R{flex-direction:row-reverse}
+.tdot{width:14px;height:14px;border-radius:50%;border:3px solid var(--bg);flex-shrink:0;position:absolute;left:50%;transform:translate(-50%,18px);z-index:3}
+.tdot.done{background:var(--g);box-shadow:0 0 8px var(--g)}.tdot.open{background:var(--y);box-shadow:0 0 8px var(--y)}
+.task-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 13px;width:calc(50% - 24px);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s}
+.task-card.clickable{cursor:pointer}
+.task-card.clickable:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4);border-color:var(--gl)}
+.task-card.done{border-color:var(--gd)}
+.node-row.L .task-card::after,.node-row.R .task-card::after{content:'';position:absolute;top:22px;height:2px;background:var(--border);width:24px}
+.node-row.L .task-card::after{right:-24px}.node-row.R .task-card::after{left:-24px}
+.task-emoji{font-size:24px;margin-bottom:4px;display:block}
+.task-name{font-size:13px;font-weight:800;color:var(--cream);line-height:1.3;margin-bottom:3px}
+.task-detail{font-size:10px;color:var(--muted);line-height:1.5}
+.task-tag{display:inline-block;margin-top:4px;border-radius:8px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.task-tag.p{background:rgba(255,213,79,.12);border:1px solid rgba(255,213,79,.3);color:var(--y)}
+.task-tag.u{background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.3);color:var(--r)}
+.task-tag.g{background:rgba(123,198,126,.12);border:1px solid rgba(123,198,126,.3);color:var(--gl)}
+.avatar-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.avatar-chip{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.07);border-radius:20px;padding:2px 7px 2px 3px;font-size:10px;color:var(--cream)}
+.avatar-fig{font-size:14px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.claim-btn{margin-top:8px;width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:11px;font-weight:800;padding:6px 0;cursor:pointer;letter-spacing:.4px;transition:filter .15s}
+.claim-btn:hover{filter:brightness(1.15)}
+.claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:default}
+.claim-btn.mine:hover{filter:none}
+.claim-btn.others{background:var(--surface);color:var(--muted);cursor:default}
+.claim-btn.others:hover{filter:none}
+
+/* ── SHOPPING ── */
+.shop-card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:14px;position:relative;z-index:2;margin-bottom:16px}
+.shop-title{font-size:13px;font-weight:900;color:var(--cream);margin-bottom:10px}
+.ing-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ing-item{background:var(--surface);border:1.5px solid var(--border);border-radius:11px;padding:9px 10px;transition:border-color .15s,transform .12s}
+.ing-item.done{border-color:var(--gd);background:rgba(46,125,50,.12)}
+.ing-hdr{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.ing-emoji{font-size:18px}
+.ing-name{font-size:11px;font-weight:800;color:var(--cream);flex:1;line-height:1.3}
+.ing-check{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0}
+.ing-item.done .ing-check{background:var(--g);border-color:var(--g)}
+.ing-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.ing-chip{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.07);border-radius:12px;padding:1px 5px 1px 2px;font-size:9px;color:var(--cream)}
+.ing-claim-btn{width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:7px;color:#fff;font-family:inherit;font-size:10px;font-weight:800;padding:5px 0;cursor:pointer;margin-top:6px;transition:filter .15s}
+.ing-claim-btn:hover{filter:brightness(1.15)}
+.ing-claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:default}
+.ing-claim-btn.mine:hover{filter:none}
+.ing-claim-btn.others{background:var(--surface);color:var(--muted);cursor:default}
+.ing-claim-btn.others:hover{filter:none}
+/* add ingredient */
+.add-sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.add-sec-lbl{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.5px}
+.emoji-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
+.em-pick{font-size:18px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:var(--surface);border:1.5px solid var(--border);cursor:pointer;transition:border-color .12s}
+.em-pick:hover,.em-pick.sel{border-color:var(--gl);background:rgba(123,198,126,.12)}
+.add-row{display:flex;gap:7px}
+.add-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;color:var(--cream);font-family:inherit;font-size:12px;padding:7px 10px;outline:none}
+.add-input:focus{border-color:var(--gl)}
+.add-input::placeholder{color:var(--muted)}
+.add-btn{background:var(--gd);border:none;border-radius:9px;color:#fff;font-size:18px;width:34px;cursor:pointer;flex-shrink:0;transition:filter .15s}
+.add-btn:hover{filter:brightness(1.2)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
+.modal-bg.show{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1.5px solid var(--border);border-radius:22px;padding:22px 18px;max-width:310px;width:92%;transform:translateY(18px);transition:transform .22s}
+.modal-bg.show .modal{transform:translateY(0)}
+.m-emoji{font-size:44px;text-align:center;margin-bottom:7px}
+.m-title{font-size:17px;font-weight:900;color:var(--cream);text-align:center;margin-bottom:4px}
+.m-desc{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:14px}
+.m-lbl{font-size:10px;font-weight:700;color:var(--gl);margin-bottom:5px;letter-spacing:.5px}
+.m-confirm{width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:11px;color:#fff;font-family:inherit;font-size:13px;font-weight:800;padding:11px 0;cursor:pointer;transition:filter .15s}
+.m-confirm:hover{filter:brightness(1.12)}
+.m-close{width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:12px;margin-top:6px;cursor:pointer;padding:5px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(0);background:var(--gd);color:#fff;border-radius:18px;padding:9px 20px;font-size:12px;font-weight:700;z-index:300;opacity:0;transition:opacity .25s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none}
+.toast.show{opacity:1}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:400}
+
+/* leaves */
+.leaf{position:fixed;pointer-events:none;z-index:0;opacity:.06;animation:drift linear infinite}
+@keyframes drift{from{transform:translateY(-60px) rotate(0)}to{transform:translateY(110vh) rotate(360deg)}}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<!-- ══ LOADING ══ -->
+<div class="screen" id="scr-loading">
+  <div class="spinner"></div>
+  <p>連線中…</p>
+</div>
+
+<!-- ══ WELCOME ══ -->
+<div class="screen hidden" id="scr-welcome">
+  <span class="welcome-emoji">🎋</span>
+  <div class="welcome-title">粽子大作戰！</div>
+  <div class="welcome-sub">5 月 31 日一起包粽子<br>選個角色開始認領任務吧</div>
+  <div class="card-box">
+    <h3>選現有成員</h3>
+    <div class="member-list" id="member-list">
+      <div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">還沒有人加入，先建立角色吧！</div>
+    </div>
+    <button class="btn-primary" id="btn-select-member" style="display:none">✅ 以此角色進入</button>
+    <div class="divider">或者</div>
+    <h3>建立新角色</h3>
+    <div class="m-lbl" style="margin-bottom:8px">選個頭像</div>
+    <div class="av-grid" id="av-grid-create"></div>
+    <input class="txt-input" id="new-name-inp" placeholder="輸入你的名字…" maxlength="8">
+    <button class="btn-primary" id="btn-create">🌿 建立角色並進入</button>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div class="screen hidden" id="scr-app" style="display:none;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0">
+  <div class="app-hdr">
+    <div class="hdr-row">
+      <div class="hdr-user" id="hdr-user">
+        <span class="hdr-user-icon" id="hdr-user-icon">🌿</span>
+        <span class="hdr-user-name" id="hdr-user-name">載入中</span>
+      </div>
+      <div class="hdr-title-wrap">
+        <span class="hdr-title">粽子大作戰 <span class="hdr-sync" id="sync-dot"></span></span>
+      </div>
+      <div style="width:80px"></div>
+    </div>
+    <div class="countdown" id="countdown"></div>
+    <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
+    <div class="prog-lbl" id="prog-lbl">載入中…</div>
+  </div>
+  <div class="track" id="track">
+    <div class="track-line"></div>
+    <div id="root"></div>
+  </div>
+</div>
+
+<!-- MODAL (claim confirm) -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="m-emoji" id="m-emoji"></div>
+    <div class="m-title" id="m-title"></div>
+    <div class="m-desc"  id="m-desc"></div>
+    <button class="m-confirm" id="m-confirm">✅ 確認認領！</button>
+    <button class="m-close"   id="m-close">取消</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  ⚙️  設定：把你的 Apps Script 網址貼這裡
+// ══════════════════════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbxpnHbfu_Tj407HAsvFaKSkMy7_s4ZYfoECvzUpa2uGOPKpF0t-G30yNAIxJmqhc8wr/exec';
+// ══════════════════════════════════════════════════════════════
+
+const POLL_MS = 10000;
+
+const AVATARS = [
+  {icon:'🧑‍🍳',label:'主廚'},{icon:'👩‍🌾',label:'農夫'},
+  {icon:'🥷',label:'忍者'},{icon:'🧙',label:'魔法師'},
+  {icon:'🐼',label:'熊貓'},{icon:'🦊',label:'狐狸'},
+  {icon:'🐸',label:'青蛙'},{icon:'🐧',label:'企鵝'},
+];
+const ING_EMOJIS=['🥩','🍚','🍄','🦐','🌰','🥚','🍃','🧅','🫙','🧂','🫒','🌾','🧄','🍋','🫚'];
+
+const DEFAULT_INGREDIENTS=[
+  {id:'i1',emoji:'🍚',name:'長糯米'},
+  {id:'i2',emoji:'🥩',name:'五花肉'},
+  {id:'i3',emoji:'🍄',name:'乾香菇'},
+  {id:'i4',emoji:'🦐',name:'蝦米'},
+  {id:'i5',emoji:'🌰',name:'栗子'},
+  {id:'i6',emoji:'🥚',name:'鹹蛋黃'},
+  {id:'i7',emoji:'🍃',name:'粽葉（竹葉）'},
+  {id:'i8',emoji:'🧶',name:'棉繩'},
+  {id:'i9',emoji:'🧅',name:'紅蔥頭'},
+  {id:'i10',emoji:'🫙',name:'醬油'},
+];
+const TASKS=[
+  {id:'p1',emoji:'🌊',name:'泡糯米',detail:'長糯米洗淨泡水 6 小時，前一天晚上泡最Q',tag:'提前',tagType:'p',sec:1},
+  {id:'p2',emoji:'🍄',name:'泡香菇＆蝦米',detail:'乾香菇泡水至少 4 小時，蝦米泡半小時',tag:'提前',tagType:'p',sec:1},
+  {id:'p3',emoji:'🍃',name:'清洗粽葉',detail:'竹葉正反刷洗，滾水燙過放涼備用',tag:'提前',tagType:'p',sec:1},
+  {id:'m1',emoji:'🥩',name:'醃豬肉',detail:'五花肉切塊，醬油、米酒、蒜末、五香粉醃 1 小時',tag:'當天',tagType:'g',sec:2},
+  {id:'m2',emoji:'🍳',name:'炒料',detail:'爆香紅蔥頭、蝦米，加香菇炒香，醬油調色',tag:'當天',tagType:'g',sec:2},
+  {id:'m3',emoji:'🌾',name:'炒糯米',detail:'瀝乾糯米下鍋翻炒，加醬油、鹽、油蔥酥拌勻入味',tag:'當天',tagType:'g',sec:2},
+  {id:'m4',emoji:'🧆',name:'備料分裝',detail:'栗子、鹹蛋黃、香菇、豬肉各放一盤，流水線備好',tag:'當天',tagType:'g',sec:2},
+  {id:'w1',emoji:'🍃',name:'折粽葉',detail:'兩片竹葉交疊折成漏斗形，是包粽子第一步',tag:'手藝',tagType:'u',sec:3},
+  {id:'w2',emoji:'🌿',name:'填糯米＆配料',detail:'舀一勺糯米鋪底，放配料，再蓋米壓緊',tag:'手藝',tagType:'u',sec:3},
+  {id:'w3',emoji:'🎀',name:'綁粽子',detail:'折好後用棉繩纏繞紮緊，鬆了煮開會散！',tag:'手藝',tagType:'u',sec:3},
+  {id:'w4',emoji:'📦',name:'整理入鍋',detail:'粽子整齊排入大鍋，加水蓋過，準備蒸煮',tag:'',tagType:'',sec:3},
+  {id:'c1',emoji:'🫕',name:'顧火',detail:'大火滾後轉中小火，悶煮 2 小時，中途補熱水',tag:'重要',tagType:'u',sec:4},
+  {id:'c2',emoji:'🧹',name:'善後打掃',detail:'廚房清潔、鍋具收洗、處理剩餘食材',tag:'',tagType:'',sec:4},
+  {id:'c3',emoji:'📸',name:'拍美照',detail:'成品擺盤拍照，記錄今天的勞動成果 🎉',tag:'',tagType:'',sec:4},
+];
+const SECTIONS=[
+  {id:0,label:'🛒 採買食材'},
+  {id:1,label:'📅 提前處理（5/27 前）'},
+  {id:2,label:'🌅 當天早上（5/31）'},
+  {id:3,label:'🎁 包粽時間！'},
+  {id:4,label:'🔥 蒸煮收尾'},
+];
+
+// ── state ─────────────────────────────────────────────────────
+let state = { ingredients: [], tasks: {} };
+let members = [];
+let me = null; // {name, icon}
+let modalCtx = null;
+let createAvatarSel = null;
+let addEmojiSel = ING_EMOJIS[0];
+let pollTimer = null;
+
+// ── leaves ────────────────────────────────────────────────────
+['🍃','🌿','🎋','🍀'].forEach(e=>{for(let j=0;j<3;j++){const d=document.createElement('div');d.className='leaf';d.textContent=e;d.style.left=Math.random()*100+'%';d.style.animationDuration=(12+Math.random()*18)+'s';d.style.animationDelay=(-Math.random()*20)+'s';d.style.fontSize=(14+Math.random()*14)+'px';document.body.appendChild(d);}});
+
+// ── API helpers ───────────────────────────────────────────────
+function sync(dot){const d=document.getElementById('sync-dot');if(d)d.className='hdr-sync '+dot;}
+
+// Apps Script 公開部署後 GET 自動帶 CORS，POST 用 form-encoded 避免 preflight
+async function apiGet(){
+  sync('loading');
+  try{
+    const r=await fetch(API_URL+'?action=getState&t='+Date.now());
+    const d=await r.json();
+    if(d.ok){
+      if(d.state.ingredients) state.ingredients=d.state.ingredients;
+      else state.ingredients=JSON.parse(JSON.stringify(DEFAULT_INGREDIENTS)).map(i=>({...i,claimants:[]}));
+      if(d.state.tasks) state.tasks=d.state.tasks;
+      members=d.members||[];
+      sync('ok');
+    } else sync('err');
+    return d;
+  }catch(e){sync('err');throw e;}
+}
+
+// 用 GET + URLSearchParams 傳資料，避免 preflight CORS 問題
+async function apiSet(key,value){
+  sync('loading');
+  try{
+    const params=new URLSearchParams({action:'setState',key,value:JSON.stringify(value)});
+    await fetch(API_URL+'?'+params.toString());
+    sync('ok');
+  }catch{sync('err');}
+}
+
+async function apiAddMember(name,icon){
+  try{
+    const params=new URLSearchParams({action:'addMember',name,icon});
+    const r=await fetch(API_URL+'?'+params.toString());
+    return r.json();
+  }catch(e){return {ok:false,error:'network'};}
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+async function init(){
+  showScreen('scr-loading');
+  // load saved me from localStorage
+  const savedMe=localStorage.getItem('zongzi_me');
+  if(savedMe) me=JSON.parse(savedMe);
+
+  try{
+    await apiGet();
+  }catch{
+    document.querySelector('#scr-loading p').textContent='⚠️ 連線失敗，請檢查網址設定';
+    return;
+  }
+
+  if(me && members.some(m=>m.name===me.name)){
+    enterApp();
+  } else {
+    me=null;
+    showScreen('scr-welcome');
+    renderWelcome();
+  }
+}
+
+// ── WELCOME SCREEN ────────────────────────────────────────────
+function renderWelcome(){
+  // existing members
+  const ml=document.getElementById('member-list');
+  if(members.length===0){
+    ml.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">還沒有人加入，先建立角色吧！</div>';
+    document.getElementById('btn-select-member').style.display='none';
+  } else {
+    let selName=null;
+    ml.innerHTML='';
+    members.forEach(m=>{
+      const btn=document.createElement('button');
+      btn.className='member-btn';
+      btn.innerHTML=`<div class="member-icon">${m.icon}</div><div><div class="member-name">${m.name}</div><div class="member-role">點選進入</div></div>`;
+      btn.addEventListener('click',()=>{
+        ml.querySelectorAll('.member-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        selName=m.name;
+        document.getElementById('btn-select-member').style.display='block';
+      });
+      ml.appendChild(btn);
+    });
+    document.getElementById('btn-select-member').onclick=()=>{
+      if(!selName)return;
+      const found=members.find(m=>m.name===selName);
+      if(found){ me={name:found.name,icon:found.icon}; localStorage.setItem('zongzi_me',JSON.stringify(me)); enterApp(); }
+    };
+  }
+
+  // avatar picker for create
+  const grid=document.getElementById('av-grid-create');
+  grid.innerHTML=AVATARS.map((a,i)=>`<div class="av-pick" data-i="${i}">${a.icon}<span>${a.label}</span></div>`).join('');
+  grid.querySelectorAll('.av-pick').forEach(el=>{
+    el.addEventListener('click',()=>{
+      grid.querySelectorAll('.av-pick').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel');
+      createAvatarSel=AVATARS[+el.dataset.i];
+    });
+  });
+
+  document.getElementById('btn-create').onclick=createMember;
+  document.getElementById('new-name-inp').onkeydown=e=>{if(e.key==='Enter')createMember();};
+}
+
+async function createMember(){
+  if(!createAvatarSel){showToast('請先選個頭像 🎭');return;}
+  const name=(document.getElementById('new-name-inp').value||'').trim();
+  if(!name){showToast('請輸入名字 ✏️');return;}
+  if(members.some(m=>m.name===name)){showToast('這個名字已經有人用了！');return;}
+  const res=await apiAddMember(name,createAvatarSel.icon);
+  if(res.ok){
+    me={name,icon:createAvatarSel.icon};
+    localStorage.setItem('zongzi_me',JSON.stringify(me));
+    members.push({name,icon:createAvatarSel.icon});
+    enterApp();
+    showToast(`${createAvatarSel.icon} ${name} 加入了！歡迎 🎉`);
+    launchConfetti();
+  } else if(res.error==='name_exists'){
+    showToast('這個名字已有人用了，換一個吧');
+  }
+}
+
+// ── ENTER APP ────────────────────────────────────────────────
+function enterApp(){
+  showScreen('scr-app');
+  document.getElementById('hdr-user-icon').textContent=me.icon;
+  document.getElementById('hdr-user-name').textContent=me.name;
+  document.getElementById('hdr-user').onclick=()=>{
+    me=null; localStorage.removeItem('zongzi_me');
+    clearInterval(pollTimer);
+    showScreen('scr-welcome');
+    renderWelcome();
+  };
+  render();
+  updateCountdown();
+  setInterval(updateCountdown,60000);
+  pollTimer=setInterval(async()=>{ try{ await apiGet(); render(); }catch{} },POLL_MS);
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render(){
+  if(!state.ingredients||state.ingredients.length===0)
+    state.ingredients=JSON.parse(JSON.stringify(DEFAULT_INGREDIENTS)).map(i=>({...i,claimants:[]}));
+
+  const root=document.getElementById('root');
+  root.innerHTML='';
+
+  // Section 0: Shopping
+  root.appendChild(mkSecLbl(SECTIONS[0].label));
+  const shopCard=document.createElement('div');
+  shopCard.className='shop-card';
+
+  const ingGrid=document.createElement('div');
+  ingGrid.className='ing-grid';
+  state.ingredients.forEach(ing=>{
+    const cl=ing.claimants||[];
+    const isMine=cl.some(c=>c.name===me.name);
+    const hasClaim=cl.length>0;
+    const item=document.createElement('div');
+    item.className='ing-item'+(hasClaim?' done':'');
+    item.innerHTML=`
+      <div class="ing-hdr">
+        <span class="ing-emoji">${ing.emoji}</span>
+        <span class="ing-name">${ing.name}</span>
+        <div class="ing-check">${hasClaim?'✓':''}</div>
+      </div>
+      ${cl.length?`<div class="ing-chips">${cl.map(c=>`<div class="ing-chip"><span>${c.icon}</span>${c.name}</div>`).join('')}</div>`:''}
+      <button class="ing-claim-btn ${isMine?'mine':hasClaim?'others':''}" data-id="${ing.id}">
+        ${isMine?'✅ 我去買':''}${!isMine&&hasClaim?'有人買了':''}${!hasClaim?'🙋 我去買！':''}
+      </button>
+    `;
+    if(!isMine&&!hasClaim){
+      item.querySelector('.ing-claim-btn').addEventListener('click',e=>{
+        e.stopPropagation();
+        openModal({type:'ingredient',id:ing.id,emoji:ing.emoji,name:ing.name,detail:'認領後請記得採買這個食材！'});
+      });
+    }
+    ingGrid.appendChild(item);
+  });
+  shopCard.appendChild(ingGrid);
+
+  // add ingredient
+  shopCard.insertAdjacentHTML('beforeend',`
+    <div class="add-sec">
+      <div class="add-sec-lbl">+ 補充食材</div>
+      <div class="emoji-row" id="emoji-row"></div>
+      <div class="add-row" style="margin-top:6px">
+        <input class="add-input" id="add-inp" placeholder="食材名稱…" maxlength="12">
+        <button class="add-btn" id="add-btn">＋</button>
+      </div>
+    </div>
+  `);
+  root.appendChild(shopCard);
+
+  const emojiRow=shopCard.querySelector('#emoji-row');
+  ING_EMOJIS.forEach(em=>{
+    const ep=document.createElement('div');
+    ep.className='em-pick'+(em===addEmojiSel?' sel':'');
+    ep.textContent=em;
+    ep.addEventListener('click',()=>{addEmojiSel=em;emojiRow.querySelectorAll('.em-pick').forEach(x=>x.classList.remove('sel'));ep.classList.add('sel');});
+    emojiRow.appendChild(ep);
+  });
+  shopCard.querySelector('#add-btn').addEventListener('click',addIngredient);
+  shopCard.querySelector('#add-inp').addEventListener('keydown',e=>{if(e.key==='Enter')addIngredient();});
+
+  // Sections 1–4: Tasks
+  let nodeIdx=0;
+  [1,2,3,4].forEach(secId=>{
+    root.appendChild(mkSecLbl(SECTIONS[secId].label));
+    TASKS.filter(t=>t.sec===secId).forEach(task=>{
+      const cl=state.tasks[task.id]||[];
+      const isMine=cl.some(c=>c.name===me.name);
+      const hasClaim=cl.length>0;
+      const side=nodeIdx%2===0?'L':'R'; nodeIdx++;
+      const row=document.createElement('div');
+      row.className=`node-row ${side}`;
+      const dot=document.createElement('div');
+      dot.className=`tdot ${hasClaim?'done':'open'}`;
+      const card=document.createElement('div');
+      card.className=`task-card${!isMine&&!hasClaim?' clickable':''}${hasClaim?' done':''}`;
+      card.innerHTML=`
+        <span class="task-emoji">${task.emoji}</span>
+        <div class="task-name">${task.name}</div>
+        <div class="task-detail">${task.detail}</div>
+        ${task.tag?`<span class="task-tag ${task.tagType}">${task.tag}</span>`:''}
+        ${cl.length?`<div class="avatar-row">${cl.map(c=>`<div class="avatar-chip"><div class="avatar-fig">${c.icon}</div>${c.name}</div>`).join('')}</div>`:''}
+        <button class="claim-btn ${isMine?'mine':hasClaim?'others':''}" data-id="${task.id}">
+          ${isMine?'✅ 我認領了':''}${!isMine&&hasClaim?'已有人認領':''}${!hasClaim?'🙋 我來！':''}
+        </button>
+      `;
+      if(!isMine&&!hasClaim){
+        card.querySelector('.claim-btn').addEventListener('click',e=>{
+          e.stopPropagation();
+          openModal({type:'task',id:task.id,emoji:task.emoji,name:task.name,detail:task.detail});
+        });
+      }
+      if(side==='L'){row.appendChild(card);row.appendChild(dot);}
+      else{row.appendChild(dot);row.appendChild(card);}
+      root.appendChild(row);
+    });
+  });
+
+  updateProgress();
+}
+
+function mkSecLbl(text){
+  const d=document.createElement('div');d.className='sec-lbl';d.innerHTML=`<span>${text}</span>`;return d;
+}
+
+function updateProgress(){
+  const ingDone=state.ingredients.filter(i=>(i.claimants||[]).length>0).length;
+  const taskDone=TASKS.filter(t=>(state.tasks[t.id]||[]).length>0).length;
+  const done=ingDone+taskDone;
+  const total=state.ingredients.length+TASKS.length;
+  const pct=Math.round(done/total*100);
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-lbl').textContent=`已認領 ${done} / ${total} 項（${pct}%）`;
+}
+
+// ── ADD INGREDIENT ────────────────────────────────────────────
+async function addIngredient(){
+  const inp=document.getElementById('add-inp');
+  const name=(inp.value||'').trim();
+  if(!name){showToast('請輸入食材名稱');return;}
+  if(state.ingredients.some(i=>i.name===name)){showToast('已經在清單了！');return;}
+  const newIng={id:'i_'+Date.now(),emoji:addEmojiSel,name,claimants:[]};
+  state.ingredients.push(newIng);
+  inp.value='';
+  await apiSet('ingredients',state.ingredients);
+  render();
+  showToast(`${addEmojiSel} ${name} 已加入！`);
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(ctx){
+  modalCtx=ctx;
+  document.getElementById('m-emoji').textContent=ctx.emoji;
+  document.getElementById('m-title').textContent=ctx.name;
+  document.getElementById('m-desc').textContent=ctx.detail;
+  document.getElementById('modal-bg').classList.add('show');
+}
+document.getElementById('m-close').addEventListener('click',closeModal);
+document.getElementById('modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('modal-bg'))closeModal();});
+function closeModal(){document.getElementById('modal-bg').classList.remove('show');modalCtx=null;}
+
+document.getElementById('m-confirm').addEventListener('click',async()=>{
+  if(!modalCtx||!me)return;
+  if(modalCtx.type==='ingredient'){
+    const ing=state.ingredients.find(i=>i.id===modalCtx.id);
+    if(!ing)return;
+    if(!ing.claimants)ing.claimants=[];
+    if(ing.claimants.some(c=>c.name===me.name)){showToast('你已認領了！');closeModal();return;}
+    ing.claimants.push({icon:me.icon,name:me.name});
+    closeModal();
+    await apiSet('ingredients',state.ingredients);
+  } else {
+    if(!state.tasks[modalCtx.id])state.tasks[modalCtx.id]=[];
+    if(state.tasks[modalCtx.id].some(c=>c.name===me.name)){showToast('你已認領了！');closeModal();return;}
+    state.tasks[modalCtx.id].push({icon:me.icon,name:me.name});
+    closeModal();
+    await apiSet('tasks',state.tasks);
+  }
+  render();
+  showToast(`${me.icon} ${me.name} 認領成功！🎉`);
+  launchConfetti();
+});
+
+// ── COUNTDOWN ────────────────────────────────────────────────
+function updateCountdown(){
+  const target=new Date('2025-05-31T08:00:00');
+  const now=new Date();
+  const diff=target-now;
+  const el=document.getElementById('countdown');
+  if(!el)return;
+  if(diff<=0){el.innerHTML='<div style="color:var(--gl);font-weight:800;font-size:13px">🎉 今天就是包粽日！</div>';return;}
+  const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000);
+  el.innerHTML=[{n:d,l:'天'},{n:h,l:'時'},{n:m,l:'分'}].map(x=>`<div class="cd-block"><div class="cd-num">${x.n}</div><div class="cd-lab">${x.l}</div></div>`).join('');
+}
+
+// ── SCREEN SWITCH ─────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.add('hidden');s.style.display='none';});
+  const el=document.getElementById(id);
+  el.classList.remove('hidden');
+  el.style.display='flex';
+}
+
+// ── TOAST + CONFETTI ─────────────────────────────────────────
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function launchConfetti(){const cv=document.getElementById('confetti');const ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const p=Array.from({length:70},()=>({x:Math.random()*cv.width,y:-10,r:4+Math.random()*5,d:Math.random()*80,color:['#4caf50','#ffd54f','#ff8f00','#7bc67e','#fff9ec'][Math.floor(Math.random()*5)],tilt:0,tiltAngle:0,tai:Math.random()*.07+.05}));let f=0;function draw(){ctx.clearRect(0,0,cv.width,cv.height);p.forEach(q=>{q.tiltAngle+=q.tai;q.y+=3+Math.sin(q.d);q.tilt=Math.sin(q.tiltAngle)*15;ctx.beginPath();ctx.lineWidth=q.r;ctx.strokeStyle=q.color;ctx.moveTo(q.x+q.tilt+q.r/2,q.y);ctx.lineTo(q.x+q.tilt,q.y+q.tilt+q.r/2);ctx.stroke();});if(++f<120)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);}draw();}
+
+// ── START ────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
