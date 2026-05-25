@@ -110,8 +110,8 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 .avatar-fig{font-size:14px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .claim-btn{margin-top:8px;width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:11px;font-weight:800;padding:6px 0;cursor:pointer;letter-spacing:.4px;transition:filter .15s}
 .claim-btn:hover{filter:brightness(1.15)}
-.claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:default}
-.claim-btn.mine:hover{filter:none}
+.claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:pointer}
+.claim-btn.mine:hover{filter:brightness(1.1)}
 .claim-btn.others{background:var(--surface);color:var(--muted);cursor:default}
 .claim-btn.others:hover{filter:none}
 
@@ -130,8 +130,8 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 .ing-chip{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.07);border-radius:12px;padding:1px 5px 1px 2px;font-size:9px;color:var(--cream)}
 .ing-claim-btn{width:100%;background:linear-gradient(135deg,var(--gd),var(--g));border:none;border-radius:7px;color:#fff;font-family:inherit;font-size:10px;font-weight:800;padding:5px 0;cursor:pointer;margin-top:6px;transition:filter .15s}
 .ing-claim-btn:hover{filter:brightness(1.15)}
-.ing-claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:default}
-.ing-claim-btn.mine:hover{filter:none}
+.ing-claim-btn.mine{background:rgba(46,125,50,.3);color:var(--gl);cursor:pointer}
+.ing-claim-btn.mine:hover{filter:brightness(1.1)}
 .ing-claim-btn.others{background:var(--surface);color:var(--muted);cursor:default}
 .ing-claim-btn.others:hover{filter:none}
 /* add ingredient */
@@ -261,6 +261,10 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
     <div class="m-emoji" id="m-emoji"></div>
     <div class="m-title" id="m-title"></div>
     <div class="m-desc"  id="m-desc"></div>
+    <div id="m-note-wrap" style="display:none;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--gl);margin-bottom:5px;letter-spacing:.5px">備註（選填）</div>
+      <input class="txt-input" id="m-note-inp" placeholder="例：我家還有半包、買2斤…" maxlength="20" style="margin-bottom:0">
+    </div>
     <button class="m-confirm" id="m-confirm">✅ 確認認領！</button>
     <button class="m-close"   id="m-close">取消</button>
   </div>
@@ -527,15 +531,23 @@ function render(){
         <span class="ing-name">${ing.name}</span>
         <div class="ing-check">${hasClaim?'✓':''}</div>
       </div>
-      ${cl.length?`<div class="ing-chips">${cl.map(c=>`<div class="ing-chip"><span>${c.icon}</span>${c.name}</div>`).join('')}</div>`:''}
-      <button class="ing-claim-btn ${isMine?'mine':hasClaim?'others':''}" data-id="${ing.id}">
-        ${isMine?'✅ 我去買':''}${!isMine&&hasClaim?'有人買了':''}${!hasClaim?'🙋 我去買！':''}
+      ${cl.length?`<div class="ing-chips">${cl.map(c=>`
+        <div class="ing-chip">
+          <span>${c.icon}</span>${c.name}${c.note?`<span style="color:var(--muted);margin-left:2px">・${c.note}</span>`:''}
+        </div>`).join('')}</div>`:''}
+      <button class="ing-claim-btn ${isMine?'mine':''}" data-id="${ing.id}">
+        ${isMine?'✅ 我去買':'🙋 我也去買！'}
       </button>
     `;
-    if(!isMine&&!hasClaim){
+    if(!isMine){
       item.querySelector('.ing-claim-btn').addEventListener('click',e=>{
         e.stopPropagation();
-        openModal({type:'ingredient',id:ing.id,emoji:ing.emoji,name:ing.name,detail:'認領後請記得採買這個食材！'});
+        openModal({type:'ingredient',id:ing.id,emoji:ing.emoji,name:ing.name,detail:'可以留言說你帶多少量！',showNote:true});
+      });
+    } else {
+      item.querySelector('.ing-claim-btn').addEventListener('click',e=>{
+        e.stopPropagation();
+        openModal({type:'unclaim-ingredient',id:ing.id,emoji:ing.emoji,name:ing.name,detail:'確定要取消認領嗎？'});
       });
     }
     ingGrid.appendChild(item);
@@ -596,6 +608,11 @@ function render(){
           e.stopPropagation();
           openModal({type:'task',id:task.id,emoji:task.emoji,name:task.name,detail:task.detail});
         });
+      } else if(isMine){
+        card.querySelector('.claim-btn').addEventListener('click',e=>{
+          e.stopPropagation();
+          openModal({type:'unclaim-task',id:task.id,emoji:task.emoji,name:task.name,detail:'確定要取消認領嗎？'});
+        });
       }
       if(side==='L'){row.appendChild(card);row.appendChild(dot);}
       else{row.appendChild(dot);row.appendChild(card);}
@@ -641,6 +658,12 @@ function openModal(ctx){
   document.getElementById('m-emoji').textContent=ctx.emoji;
   document.getElementById('m-title').textContent=ctx.name;
   document.getElementById('m-desc').textContent=ctx.detail;
+  document.getElementById('m-note-inp').value='';
+  document.getElementById('m-note-wrap').style.display=ctx.showNote?'block':'none';
+  const isUnclaim=ctx.type==='unclaim-ingredient'||ctx.type==='unclaim-task';
+  const confirmBtn=document.getElementById('m-confirm');
+  confirmBtn.textContent=isUnclaim?'❌ 確認取消認領':'✅ 確認認領！';
+  confirmBtn.style.background=isUnclaim?'linear-gradient(135deg,#b71c1c,var(--r))':'';
   document.getElementById('modal-bg').classList.add('show');
 }
 document.getElementById('m-close').addEventListener('click',closeModal);
@@ -649,24 +672,42 @@ function closeModal(){document.getElementById('modal-bg').classList.remove('show
 
 document.getElementById('m-confirm').addEventListener('click',async()=>{
   if(!modalCtx||!me)return;
+  const note=(document.getElementById('m-note-inp').value||'').trim();
   if(modalCtx.type==='ingredient'){
     const ing=state.ingredients.find(i=>i.id===modalCtx.id);
     if(!ing)return;
     if(!ing.claimants)ing.claimants=[];
     if(ing.claimants.some(c=>c.name===me.name)){showToast('你已認領了！');closeModal();return;}
-    ing.claimants.push({icon:me.icon,name:me.name});
+    ing.claimants.push({icon:me.icon,name:me.name,note});
     closeModal();
     await apiSet('ingredients',state.ingredients);
-  } else {
+    render();
+    showToast(`${me.icon} ${me.name} 認領成功！🎉`);
+    launchConfetti();
+  } else if(modalCtx.type==='unclaim-ingredient'){
+    const ing=state.ingredients.find(i=>i.id===modalCtx.id);
+    if(!ing)return;
+    ing.claimants=(ing.claimants||[]).filter(c=>c.name!==me.name);
+    closeModal();
+    await apiSet('ingredients',state.ingredients);
+    render();
+    showToast(`已取消認領 ${ing.emoji} ${ing.name}`);
+  } else if(modalCtx.type==='task'){
     if(!state.tasks[modalCtx.id])state.tasks[modalCtx.id]=[];
     if(state.tasks[modalCtx.id].some(c=>c.name===me.name)){showToast('你已認領了！');closeModal();return;}
     state.tasks[modalCtx.id].push({icon:me.icon,name:me.name});
     closeModal();
     await apiSet('tasks',state.tasks);
+    render();
+    showToast(`${me.icon} ${me.name} 認領成功！🎉`);
+    launchConfetti();
+  } else if(modalCtx.type==='unclaim-task'){
+    state.tasks[modalCtx.id]=(state.tasks[modalCtx.id]||[]).filter(c=>c.name!==me.name);
+    closeModal();
+    await apiSet('tasks',state.tasks);
+    render();
+    showToast(`已取消認領 ${modalCtx.emoji} ${modalCtx.name}`);
   }
-  render();
-  showToast(`${me.icon} ${me.name} 認領成功！🎉`);
-  launchConfetti();
 });
 
 // ── COUNTDOWN ────────────────────────────────────────────────
