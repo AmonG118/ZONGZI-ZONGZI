@@ -160,6 +160,15 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 .m-confirm:hover{filter:brightness(1.12)}
 .m-close{width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:12px;margin-top:6px;cursor:pointer;padding:5px}
 
+/* ── ESTIMATION BAR ── */
+.est-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;margin:0 18px 6px}
+.est-title{font-size:10px;font-weight:700;color:var(--gl);letter-spacing:.5px;margin-bottom:8px}
+.est-list{display:flex;flex-direction:column;gap:5px}
+.est-row{display:flex;align-items:center;justify-content:space-between}
+.est-ing{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--cream)}
+.est-qty{font-size:11px;font-weight:800;color:var(--y)}
+.est-qty.dim{color:var(--muted);font-weight:400}
+
 /* ── COUNT BAR ── */
 .count-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;margin:0 18px 6px}
 .count-title{font-size:10px;font-weight:700;color:var(--gl);letter-spacing:.5px;margin-bottom:8px}
@@ -246,6 +255,10 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
       </div>
       <div class="count-chips" id="count-chips"></div>
     </div>
+    <div class="est-bar" id="est-bar">
+      <div class="est-title">📋 採買估算</div>
+      <div class="est-list" id="est-list"><div style="color:var(--muted);font-size:11px;text-align:center;padding:4px">先輸入包幾顆來估算 👆</div></div>
+    </div>
     <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
     <div class="prog-lbl" id="prog-lbl">載入中…</div>
   </div>
@@ -288,6 +301,20 @@ const AVATARS = [
   {icon:'🐸',label:'青蛙'},{icon:'🐧',label:'企鵝'},
 ];
 const ING_EMOJIS=['🥩','🍚','🍄','🦐','🌰','🥚','🍃','🧅','🫙','🧂','🫒','🌾','🧄','🍋','🫚'];
+
+const EST_ITEMS=[
+  {emoji:'🍚',name:'糯米',perUnit:2/20,unit:'斤',note:'圓長自行調配'},
+  {emoji:'🥩',name:'五花肉',perUnit:1/20,unit:'斤'},
+  {emoji:'🥚',name:'鹹蛋黃',perUnit:1,unit:'個'},
+  {emoji:'🍄',name:'乾香菇',perUnit:10/20,unit:'朵'},
+  {emoji:'🍃',name:'粽葉',perUnit:1/20,unit:'把'},
+  {emoji:'🧶',name:'棉繩',perUnit:1/20,unit:'捆'},
+  {emoji:'🦐',name:'蝦米',label:'適量'},
+  {emoji:'🧅',name:'紅蔥頭',label:'適量'},
+  {emoji:'🫙',name:'醬油',label:'適量'},
+  {emoji:'🌰',name:'栗子',label:'依個人喜好'},
+  {emoji:'🥜',name:'花生',label:'依個人喜好'},
+];
 
 const DEFAULT_INGREDIENTS=[
   {id:'i1',emoji:'🍚',name:'長糯米'},
@@ -489,12 +516,39 @@ async function changeCount(delta){
   await apiSet('counts',state.counts);
 }
 
+function updateEstimation(total){
+  const list=document.getElementById('est-list');
+  if(!list)return;
+  if(!total){
+    list.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:4px">先輸入包幾顆來估算 👆</div>';
+    return;
+  }
+  list.innerHTML=EST_ITEMS.map(item=>{
+    let qtyHtml;
+    if(item.label){
+      qtyHtml=`<span class="est-qty dim">${item.label}</span>`;
+    } else {
+      const raw=item.perUnit*total;
+      let display;
+      if(item.unit==='斤'){
+        const v=Math.max(0.5,Math.round(raw*2)/2);
+        display=v+' 斤'+(item.note?` <small style="color:var(--muted)">(${item.note})</small>`:'');
+      } else {
+        display=Math.max(1,Math.ceil(raw))+' '+item.unit;
+      }
+      qtyHtml=`<span class="est-qty">${display}</span>`;
+    }
+    return `<div class="est-row"><span class="est-ing"><span>${item.emoji}</span>${item.name}</span>${qtyHtml}</div>`;
+  }).join('');
+}
+
 function updateCountBar(){
   const counts=state.counts||{};
   const myCount=counts[me.name]||0;
   const total=Object.values(counts).reduce((a,b)=>a+(+b),0);
   document.getElementById('count-mine').textContent=myCount;
   document.getElementById('count-total').textContent=total;
+  updateEstimation(total);
   const chips=document.getElementById('count-chips');
   chips.innerHTML=Object.entries(counts)
     .filter(([,v])=>v>0)
