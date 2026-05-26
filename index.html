@@ -28,7 +28,7 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 #scr-loading p{color:var(--muted);font-size:14px}
 
 /* ── WELCOME / CREATE ── */
-.welcome-emoji{font-size:64px;margin-bottom:12px;display:block;animation:bounce 2s ease-in-out infinite}
+.welcome-emoji{width:96px;height:112px;margin:0 auto 12px;display:block;animation:bounce 2s ease-in-out infinite}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .welcome-title{font-size:28px;font-weight:900;color:var(--text);text-align:center;margin-bottom:4px}
 .welcome-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;line-height:1.6}
@@ -214,7 +214,27 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:v
 
 <!-- ══ WELCOME ══ -->
 <div class="screen hidden" id="scr-welcome">
-  <span class="welcome-emoji">🎋</span>
+  <div class="welcome-emoji">
+    <svg viewBox="0 0 80 96" width="96" height="112" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 14C55 14 68 29 68 47C68 65 58 84 40 84C22 84 12 65 12 47C12 29 25 14 40 14Z" fill="#3A7450"/>
+      <path d="M14 42C22 36 58 36 66 42L64 52C56 57 24 57 16 52Z" fill="#5A9468" opacity="0.55"/>
+      <line x1="28" y1="37" x2="24" y2="56" stroke="#2E5E42" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="40" y1="36" x2="40" y2="57" stroke="#2E5E42" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="52" y1="37" x2="56" y2="56" stroke="#2E5E42" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <ellipse cx="30" cy="30" rx="7" ry="4" fill="#5A9468" opacity="0.25" transform="rotate(-20 30 30)"/>
+      <path d="M30 16C30 8 34 5 40 5C46 5 50 8 50 16" stroke="#D4A85A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="40" cy="4" r="5.5" fill="#D4A85A"/>
+      <circle cx="32" cy="55" r="4.5" fill="#FDF8F0"/>
+      <circle cx="48" cy="55" r="4.5" fill="#FDF8F0"/>
+      <circle cx="33" cy="56" r="2.5" fill="#3D2B1F"/>
+      <circle cx="49" cy="56" r="2.5" fill="#3D2B1F"/>
+      <circle cx="34" cy="55" r="1" fill="#FDF8F0"/>
+      <circle cx="50" cy="55" r="1" fill="#FDF8F0"/>
+      <ellipse cx="25" cy="62" rx="6" ry="3.5" fill="#D4846A" opacity="0.35"/>
+      <ellipse cx="55" cy="62" rx="6" ry="3.5" fill="#D4846A" opacity="0.35"/>
+      <path d="M33 67Q40 74 47 67" stroke="#FDF8F0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
   <div class="welcome-title">粽子大作戰！</div>
   <div class="welcome-sub">5 月 31 日一起包粽子<br>選個角色開始認領任務吧</div>
   <div class="card-box">
@@ -372,7 +392,25 @@ let pollTimer = null;
 let scrollObserver = null;
 
 // ── leaves ────────────────────────────────────────────────────
-['🍃','🌿','🎋','🍀'].forEach(e=>{for(let j=0;j<3;j++){const d=document.createElement('div');d.className='leaf';d.textContent=e;d.style.left=Math.random()*100+'%';d.style.animationDuration=(12+Math.random()*18)+'s';d.style.animationDelay=(-Math.random()*20)+'s';d.style.fontSize=(14+Math.random()*14)+'px';document.body.appendChild(d);}});
+const DECO=[
+  {w:44,h:54,count:3,svg:`<svg viewBox="0 0 44 54" xmlns="http://www.w3.org/2000/svg"><path d="M22 8C30 8 37 16 37 28C37 40 31 50 22 50C13 50 7 40 7 28C7 16 14 8 22 8Z" fill="#3A7450"/><path d="M8 26C13 22 31 22 36 26L35 32C30 36 14 36 9 32Z" fill="#5A9468" opacity="0.5"/><path d="M16 10C16 6 18 4 22 4C26 4 28 6 28 10" stroke="#D4A85A" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="22" cy="3" r="3.5" fill="#D4A85A"/><circle cx="17" cy="33" r="2.5" fill="#FDF8F0"/><circle cx="27" cy="33" r="2.5" fill="#FDF8F0"/><path d="M18 39Q22 43 26 39" stroke="#FDF8F0" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`},
+  {w:18,h:52,count:5,svg:`<svg viewBox="0 0 18 52" xmlns="http://www.w3.org/2000/svg"><path d="M9 2C14 8 17 19 15 35C13 45 9 50 9 50C9 50 5 45 3 35C1 19 4 8 9 2Z" fill="#7AAF85"/><line x1="9" y1="5" x2="9" y2="47" stroke="#5A9468" stroke-width="1.2" opacity="0.45" stroke-linecap="round"/></svg>`},
+  {w:24,h:44,count:4,svg:`<svg viewBox="0 0 24 44" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C19 7 22 18 20 32C18 41 12 43 12 43C12 43 6 41 4 32C2 18 5 7 12 2Z" fill="#5A9468"/><line x1="12" y1="5" x2="12" y2="40" stroke="#3A7450" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/></svg>`},
+  {w:30,h:16,count:3,svg:`<svg viewBox="0 0 30 16" xmlns="http://www.w3.org/2000/svg"><ellipse cx="6" cy="8" rx="5" ry="2.5" fill="#F2EBE0" transform="rotate(-20 6 8)" opacity="0.9"/><ellipse cx="15" cy="6" rx="5" ry="2.5" fill="#F2EBE0" transform="rotate(10 15 6)" opacity="0.9"/><ellipse cx="24" cy="10" rx="5" ry="2.5" fill="#F2EBE0" transform="rotate(-15 24 10)" opacity="0.9"/></svg>`},
+];
+DECO.forEach(item=>{
+  for(let j=0;j<item.count;j++){
+    const d=document.createElement('div');
+    d.className='leaf';
+    d.innerHTML=item.svg;
+    d.style.width=item.w+'px';
+    d.style.height=item.h+'px';
+    d.style.left=Math.random()*100+'%';
+    d.style.animationDuration=(14+Math.random()*22)+'s';
+    d.style.animationDelay=(-Math.random()*26)+'s';
+    document.body.appendChild(d);
+  }
+});
 
 // ── API helpers ───────────────────────────────────────────────
 function sync(dot){const d=document.getElementById('sync-dot');if(d)d.className='hdr-sync '+dot;}
