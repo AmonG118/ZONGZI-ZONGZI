@@ -61,6 +61,9 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);backgro
 .btn-primary:active{transform:scale(.98)}
 .btn-ghost{width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;margin-top:8px;cursor:pointer;padding:6px}
 
+/* 安全區覆蓋層：確保劉海/Dynamic Island 後方永遠是背景色 */
+#safe-cover{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:99999;pointer-events:none}
+
 /* ── MAIN APP ── */
 .app-hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);padding:calc(env(safe-area-inset-top) + 14px) 18px 8px;text-align:center;box-shadow:0 8px 20px 4px var(--bg)}
 .hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -221,6 +224,7 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);backgro
 </style>
 </head>
 <body>
+<div id="safe-cover"></div>
 <canvas id="confetti"></canvas>
 
 <!-- ══ LOADING ══ -->
