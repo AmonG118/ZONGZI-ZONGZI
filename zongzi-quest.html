@@ -199,7 +199,7 @@ body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);backgro
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:400}
 
 /* leaves */
-.leaf{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;opacity:.35;animation:drift linear infinite}
+.leaf{position:fixed;top:env(safe-area-inset-top);left:0;pointer-events:none;z-index:9999;opacity:.35;animation:drift linear infinite}
 @keyframes drift{
   0%  {transform:translateY(-60px)  rotate(0)    translateX(0px)}
   25% {transform:translateY(28vh)   rotate(90deg) translateX(14px)}
